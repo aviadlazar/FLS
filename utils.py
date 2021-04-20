@@ -1,6 +1,9 @@
+
 import cv2
 import os
 import time
+import random
+import sklearn.model_selection
 
 
 class VideoHandler:
@@ -76,8 +79,19 @@ def generate_YOLO_labels(data_dir, labels_dir, save_path):
         out_file.writelines(new_lines)
 
 
+def YOLO_train_test_split(label_path, save_train, save_test, split):
+    with open(label_path, 'r') as label_f:
+        full_data = label_f.readlines()
+        train = random.sample(full_data, round(split*len(full_data)))
+        test = [t for t in full_data if t not in train]
+        with open(save_train, 'w') as train_out:
+            train_out.writelines(train)
+        with open(save_test, 'w') as test_out:
+            test_out.writelines(test)
+
+
 if __name__ == '__main__':
-    data_dir = '/data/home/liranhal/code/data/data_APAS/cross_valid/images'
-    labels_dir = '/data/home/liranhal/code/data/data_APAS/cross_valid/labels_main_head'
-    save_path = '/data/home/liranhal/code/data/ASAP_main_annotations.txt'
-    generate_YOLO_labels(data_dir, labels_dir, save_path)
+    label_path = '/data/home/liranhal/code/data/ASAP_main_annotations.txt'
+    save_path_train = '/data/home/liranhal/code/data/ASAP_main_annotations_train.txt'
+    save_path_test = '/data/home/liranhal/code/data/ASAP_main_annotations_test.txt'
+    YOLO_train_test_split(label_path, save_path_train, save_path_test, 0.7)
