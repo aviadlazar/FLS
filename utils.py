@@ -4,7 +4,7 @@ import os
 import time
 import random
 import sklearn.model_selection
-
+import argparse
 
 class VideoHandler:
     def __init__(self, path, name=""):
@@ -90,8 +90,53 @@ def YOLO_train_test_split(label_path, save_train, save_test, split):
             test_out.writelines(test)
 
 
+def switch_yolo_to_coco(tab_line, image_size):
+    tab_line = tab_line.split(",")
+    id_ = tab_line[4]
+    x_center = float(tab_line[0])
+    y_center = float(tab_line[1])
+    width = float(tab_line[2])
+    height = float(tab_line[3])
+
+    x1 = str(round((x_center - width / 2) * image_size))
+    y1 = str(round((y_center - height / 2) * image_size))
+    x2 = str(round((x_center + width / 2) * image_size))
+    y2 = str(round((y_center + height / 2) * image_size))
+
+    return x1 + "," + y1 + "," + x2 + "," + y2 + "," + id_
+
+
+def switch_coordinates_size(line, old_size, new_size):
+    line = line.split(",")
+    id_ = line[4]
+    x1 = str(round(new_size*float(line[0])/old_size))
+    x2 = str(round(new_size*float(line[1])/old_size))
+    x3 = str(round(new_size*float(line[2])/old_size))
+    x4 = str(round(new_size*float(line[3])/old_size))
+
+    return x1 + "," + x2 + "," + x3 + "," + x4 + "," + id_
+
+def main():
+    coords = []
+    with open(FILE + "_old.txt", "r") as f:
+        for line in f:
+            tab_line = line.split(" ")
+            coord = []
+            for i, txt in enumerate(tab_line):
+                if i == 0:
+                    coord.append(txt)
+                else:
+                    coord.append(switch_coordinates_size(txt, 608, 416))
+            coords.append(' '.join(coord))
+
+    with open(FILE + ".txt", "w") as final_file:
+        final_file.writelines(coords[:-1])
+
+
 if __name__ == '__main__':
-    label_path = '/data/home/liranhal/code/data/ASAP_main_annotations.txt'
-    save_path_train = '/data/home/liranhal/code/data/ASAP_main_annotations_train.txt'
-    save_path_test = '/data/home/liranhal/code/data/ASAP_main_annotations_test.txt'
-    YOLO_train_test_split(label_path, save_path_train, save_path_test, 0.7)
+    FILE = '/data/home/liranhal/code/data/ASAP_main_annotations_train'
+    main()
+#     label_path = '/data/home/liranhal/code/data/ASAP_main_annotations.txt'
+#     save_path_train = '/data/home/liranhal/code/data/ASAP_main_annotations_train.txt'
+#     save_path_test = '/data/home/liranhal/code/data/ASAP_main_annotations_test.txt'
+#     YOLO_train_test_split(label_path, save_path_train, save_path_test, 0.7)
